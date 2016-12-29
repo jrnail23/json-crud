@@ -34,19 +34,17 @@ function sendPage(req, res, respond) {
   
   // top-level links
   coll = wstl.append({name:"homeLink",href:"/home/",
-    rel:["collection","/rels/home"],root:root}, coll);
+    rel:["self","home","collection"],root:root}, coll);
   coll = wstl.append({name:"taskLink",href:"/task/",
-    rel:["collection","/rels/task"],root:root},coll); 
+    rel:["task","collection"],root:root},coll); 
   coll = wstl.append({name:"userLink",href:"/user/",
-    rel:["collection","rels/user"],root:root},coll);
+    rel:["user","collection"],root:root},coll);
+  coll = wstl.append({name:"homeProfile",href:"/files/home.profile",
+    rel:["profile"],root:root},coll);
   
   content =  '<div class="ui segment">';
   content += '<h3>Welcome to TPS at BigCo!</h3>';
-  content += '<p><b>Select one of the following actions:</b></p>';
-  content += '<ul>';
-  content += '<li><a href="/task/" rel="collection /rels/task">Manage Tasks<a/></li>';
-  content += '<li><a href="/user/" rel="collection /rels/user">Manage Users<a/></li>';
-  content += '</ul>';
+  content += '<p><b>Select one of the links above.</b></p>';
   content += '</div>';
   
   // compose graph 

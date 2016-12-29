@@ -107,7 +107,7 @@ function loadTrans() {
     type : "safe",
     action : "read",
     kind : "home",
-    target : "list menu",
+    target : "app menu hal siren cj",
     prompt : "Home"
   });
   trans.push({
@@ -115,7 +115,7 @@ function loadTrans() {
     type : "safe",
     action : "read",
     kind : "task",
-    target : "list menu",
+    target : "app menu hal siren cj",
     prompt : "Tasks"
   });  
   trans.push({
@@ -123,19 +123,44 @@ function loadTrans() {
     type : "safe",
     action : "read",
     kind : "user",
-    target : "list menu",
+    target : "app menu hal siren cj",
     prompt : "Users"
+  });
+  trans.push({
+    name : "noteLink",
+    type : "safe",
+    action : "read",
+    kind : "note",
+    target : "app menu hal siren cj",
+    prompt : "Notes"
+  });
+  trans.push({
+    name : "homeProfile",
+    type : "safe",
+    action : "read",
+    kind : "home",
+    target : "app menu siren",
+    prompt : "Profile"
   });
 
   /************************************
   TASKS
   *************************************/
   trans.push({
+    name : "taskProfile",
+    type : "safe",
+    action : "read",
+    kind : "task",
+    target : "app menu siren",
+    prompt : "Profile"
+  });
+
+  trans.push({
     name : "taskFormListActive",
     type : "safe",
     action : "read",
     kind : "task",
-    target : "list query",
+    target : "list query hal siren cj",
     prompt : "Active Tasks",
     inputs : [
       {name : "completeFlag", prompt : "Complete", value : "false", readOnly:true}
@@ -146,7 +171,7 @@ function loadTrans() {
     type : "safe",
     action : "read",
     kind : "task",
-    target : "list query",
+    target : "list query hal siren cj",
     prompt : "Completed Tasks",
     inputs : [
       {name : "completeFlag", prompt : "Complete", value : "true", readOnly:true}
@@ -158,7 +183,7 @@ function loadTrans() {
     type : "safe",
     action : "read",
     kind : "task",
-    target : "list query",
+    target : "list query hal siren cj",
     prompt : "Search By Title",
     inputs : [
       {name : "title", prompt : "Title", value : ""}
@@ -170,7 +195,7 @@ function loadTrans() {
     type : "safe",
     action : "read",
     kind : "task",
-    target : "list query",
+    target : "list query hal siren cj",
     prompt : "Search By Assigned User",
     inputs : [
       {name : "assignedUser", prompt : "User", value : ""}
@@ -182,10 +207,10 @@ function loadTrans() {
     type : "safe",
     action : "read",
     kind : "task",
-    target : "list query",
+    target : "list query hal siren cj",
     prompt : "Search By Tag",
     inputs : [
-      {name : "tag", prompt : "Tag", value : ""}
+      {name : "tags", prompt : "Tags", value : ""}
     ]
   });
   
@@ -194,8 +219,32 @@ function loadTrans() {
     type : "safe",
     action : "read",
     kind : "task",
-    target : "item",
+    target : "item hal siren cj href",
     prompt : "Detail",
+    html : {
+      className : "item link ui basic blue button"
+    }
+  });
+
+  trans.push({
+    name : "taskLinkDetail",
+    type : "safe",
+    action : "read",
+    kind : "task",
+    target : "item hal siren cj read",
+    prompt : "Detail",
+    html : {
+      className : "item link ui basic blue button"
+    }
+  });
+
+  trans.push({
+    name : "taskLinkEdit",
+    type : "safe",
+    action : "read",
+    kind : "task",
+    target : "item hal siren cj read",
+    prompt : "Edit User",
     html : {
       className : "item link ui basic blue button"
     }
@@ -207,10 +256,11 @@ function loadTrans() {
     type : "unsafe",
     action : "append",
     kind : "task",
-    target : "list add",
+    target : "list add hal siren cj-template",
     prompt : "Add Task",
     inputs : [
       {name : "title", prompt : "Title", required : true},
+      {name : "tags", prompt : "Tags"},
       {name : "completeFlag", prompt : "Complete", value : "false", 
         pattern :"true|false",
         type:"select",
@@ -219,6 +269,25 @@ function loadTrans() {
     ]
   });
 
+  // edit task
+  trans.push({
+    name : "taskFormEdit",
+    type : "unsafe",
+    action : "replace",
+    kind : "task",
+    prompt : "Edit Task",
+    target : "item edit hal siren cj",
+    inputs : [
+      {name : "id", prompt : "ID", value : "", readOnly : true},
+      {name : "title", prompt : "Title", value : ""},
+      {name : "tags", prompt : "Tags", value : ""},
+      {name : "completeFlag", prompt : "Complete", value : "false", 
+        pattern :"true|false",
+        type:"select",
+        suggest:[{value:"false"},{value:"true"}] 
+      }
+    ]
+  });
   // edit task
   trans.push({
     name : "taskFormEditPost",
@@ -240,6 +309,18 @@ function loadTrans() {
 
   // remove task
   trans.push({
+    name : "taskFormRemove",
+    type : "unsafe",
+    action : "remove",
+    kind : "task",
+    prompt : "Remove Task",
+    target : "item edit hal siren",
+    inputs : [
+      {name : "id", prompt : "ID", readOnly : true}
+    ]
+  });
+  // remove task
+  trans.push({
     name : "taskFormRemovePost",
     type : "unsafe",
     action : "append",
@@ -257,7 +338,7 @@ function loadTrans() {
     type : "safe",
     action : "read",
     kind : "task",
-    target : "item",
+    target : "item cj read",
     prompt : "Mark Completed",
     html : {
       className : "item action ui basic blue button"
@@ -268,9 +349,33 @@ function loadTrans() {
     type : "unsafe",
     action : "append",
     kind : "task",
-    target : "item completed edit post form",
+    target : "item completed edit post form hal siren cj-template",
     prompt : "Mark Completed",
     inputs : [
+      {name: "id", prompt:"ID", readOnly:true},
+    ]
+  });
+
+  trans.push({
+    name : "taskActiveLink",
+    type : "safe",
+    action : "read",
+    kind : "task",
+    target : "item cj read",
+    prompt : "Mark Active",
+    html : {
+      className : "item action ui basic blue button"
+    }
+  });
+  trans.push({
+    name : "taskActiveForm",
+    type : "unsafe",
+    action : "append",
+    kind : "task",
+    target : "item active edit post form hal siren cj-template",
+    prompt : "Mark Active",
+    inputs : [
+
       {name: "id", prompt:"ID", readOnly:true},
     ]
   });
@@ -280,7 +385,7 @@ function loadTrans() {
     type : "safe",
     action : "read",
     kind : "task",
-    target : "item",
+    target : "item cj read",
     prompt : "Assign User",
     html : {
       className : "item action ui basic blue button"
@@ -291,7 +396,7 @@ function loadTrans() {
     type : "unsafe",
     action : "append",
     kind : "task",
-    target : "item assign edit post form",
+    target : "item assign edit post form hal siren cj-template",
     prompt : "Assign User",
     inputs : [
       {name: "id", prompt:"ID", readOnly:true},
@@ -303,11 +408,32 @@ function loadTrans() {
   USERS
   *************************************/
   trans.push({
+    name : "userProfile",
+    type : "safe",
+    action : "read",
+    kind : "user",
+    target : "app menu siren",
+    prompt : "Profile"
+  });
+
+  trans.push({
     name : "userLinkItem",
     type : "safe",
     action : "read",
     kind : "user",
-    target : "item",
+    target : "item hal siren cj href ro",
+    prompt : "Detail",
+    html : {
+      className : "item link ui basic blue button"
+    }
+  });
+
+  trans.push({
+    name : "userLinkDetail",
+    type : "safe",
+    action : "read",
+    kind : "user",
+    target : "item hal siren cj read",
     prompt : "Detail",
     html : {
       className : "item link ui basic blue button"
@@ -319,7 +445,7 @@ function loadTrans() {
     type : "safe",
     action : "read",
     kind : "user",
-    target : "item",
+    target : "item hal siren cj read",
     prompt : "Assigned Tasks",
     html : {
       className : "item link ui basic blue button"
@@ -331,7 +457,7 @@ function loadTrans() {
     type : "safe",
     action : "read",
     kind : "task",
-    target : "list query",
+    target : "list query hal siren cj",
     prompt : "Search By Nick",
     inputs : [
       {name : "nick", prompt : "Nickname", value : ""}
@@ -343,7 +469,7 @@ function loadTrans() {
     type : "safe",
     action : "read",
     kind : "task",
-    target : "list query",
+    target : "list query hal siren cj",
     prompt : "Search By Name",
     inputs : [
       {name : "name", prompt : "Name", value : ""}
@@ -351,28 +477,63 @@ function loadTrans() {
   });
 
   trans.push({
+    name : "userFormListByEmail",
+    type : "safe",
+    action : "read",
+    kind : "task",
+    target : "list query hal siren cj",
+    prompt : "Search By Email",
+    inputs : [
+      {name : "email", prompt : "Email", value : ""}
+    ]
+  });
+
+  trans.push({
     name : "userFormAdd",
     type : "unsafe",
     action : "append",
-    kind : "task",
-    target : "list add",
+    kind : "user",
+    target : "list add hal siren cj-template",
     prompt : "Add User",
     inputs : [
       {name : "nick", prompt : "Nickname", required: true, pattern: "[a-zA-Z0-9]+"},
+      {name : "email", prompt : "Email", value: "", type: "email"}, 
       {name : "name", prompt : "Full Name", value: "", required: true}, 
       {name : "password", prompt : "Password", value: "", required: true, pattern: "[a-zA-Z0-9!@#$%^&*-]+"}
     ]
   });
 
   trans.push({
+    name : "userLinkEdit",
+    type : "safe",
+    action : "read",
+    kind : "user",
+    target : "item read cj",
+    prompt : "Edit User"
+  });
+  trans.push({
+    name : "userFormEdit",
+    type : "unsafe",
+    action : "replace",
+    kind : "user",
+    prompt : "Edit User",
+    target : "item edit form hal siren",
+    inputs : [
+      {name : "nick", prompt : "Nickname", value : "", readOnly: true},
+      {name : "email", prompt : "Email", value: "", type: "email"}, 
+      {name : "name", prompt : "Full Name", value : ""}
+    ]
+  });
+  trans.push({
     name : "userFormEditPost",
     type : "unsafe",
     action : "append",
     kind : "task",
     prompt : "Edit User",
-    target : "item edit form post",
+    target : "item edit form post cj-template",
     inputs : [
       {name : "nick", prompt : "Nickname", value : "", readOnly: true},
+      {name : "email", prompt : "Email", value: "", type: "email"}, 
       {name : "name", prompt : "Full Name", value : ""}
     ]
   });
@@ -382,7 +543,7 @@ function loadTrans() {
     type : "safe",
     action : "read",
     kind : "user",
-    target : "item",
+    target : "item read cj",
     prompt : "Change Password",
     html : {
       className : "item link ui basic blue button"
@@ -394,14 +555,14 @@ function loadTrans() {
     action : "append",
     kind : "task",
     prompt : "Change Password",
-    target : "item edit form post",
+    target : "item edit form post hal siren cj-template",
     inputs : [
       {name : "nick", prompt : "Nickname", value : "", readOnly: true},
       {name : "oldpass", prompt : "Current Password", value : "", required: true, pattern: "[a-zA-Z0-9!@#$%^&*-]+"},
       {name : "newpass", prompt : "New Password", value : "", required: true, pattern: "[a-zA-Z0-9!@#$%^&*-]+"},
-      {name : "checkpass", prompt : "Confirm New Password", value : "", required: true, pattern: "[a-zA-Z0-9!@#$%^&*-]+"}
+      {name : "checkpass", prompt : "Confirm PW", value : "", required: true, pattern: "[a-zA-Z0-9!@#$%^&*-]+"}
     ]
-  });
+  });  
 
   // return complete 
   // design-time WSTL

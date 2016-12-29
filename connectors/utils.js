@@ -10,6 +10,55 @@ var fs = require('fs');
 var qs = require('querystring');
 var folder = process.cwd() + '/files/';
 
+// for profile work
+var task = require('./../components/task-component.js');
+var user = require('./../components/user-component.js');
+
+// for handling hal-forms extension
+var halFormType = "application/prs.hal-forms+json";
+var sirenSopType = "application/prs.siren-sop+json";
+
+// load up action map (for Siren)
+var httpActions = {};
+httpActions.append = "POST";
+httpActions.partial = "PATCH";
+httpActions.read = "GET";
+httpActions.remove = "DELETE";
+httpActions.replace = "PUT";
+
+// map WeSTL actions to HTTP
+exports.actionMethod = function(action, protocol) {
+  var p = protocol||"http";
+  var rtn = "GET";
+
+  switch(p) {
+    case "http":
+      rtn = httpActions[action];
+      break;
+    default:
+      rtn = "GET";
+  }
+  return rtn;
+}
+
+// export object profiles
+exports.profile = function(name) {
+  var rtn;
+  
+  switch(name.toLowerCase()) {
+    case "task":
+      rtn = task("profile");
+      break;
+    case "user":
+      rtn = user("profile");
+      break;
+    default:
+      rtn = {};
+      break;
+  }
+  return rtn;
+}
+
 // only write 'known' properties for an item
 exports.setProps = function(item, props) {
   var rtn, i, x, p;
@@ -81,6 +130,13 @@ exports.file = function(req, res, parts, respond) {
     if (parts[1].indexOf('.html') !== -1) {
       type = 'text/html';
     }
+    if(req.headers["accept"].indexOf(halFormType)!==-1) {
+      type = halFormType;
+    }
+    if(req.headers["accept"].indexOf(sirenSopType)!==-1) {
+      type = sirenSopType;
+    }
+    
     respond(req, res, {
       code: 200,
       doc: body,
@@ -90,7 +146,7 @@ exports.file = function(req, res, parts, respond) {
       file: true
     });
   } catch (ex) {
-    respond(req, res, errorResponse(req, res, "File Not Found", 404));
+    respond(req, res, this.errorResponse(req, res, "File Not Found", 404));
   }
 }
 

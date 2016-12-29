@@ -28,7 +28,10 @@ var port         = (process.env.PORT || 8181);
 
 var htmlType     = "text/html";
 var jsonType     = "application/json";
+var halType      = "application/vnd.hal+json";
 var wstlType     = "application/vnd.wstl+json";
+var sirenType    = "application/vnd.siren+json";
+var cjType       = "application/vnd.collection+json";
 
 var csType       = '';
 var csAccept     = '';
@@ -56,7 +59,7 @@ function handler(req, res) {
   // default to JSON
   csAccept = req.headers["accept"];
   if(!csAccept || csAccept.indexOf(htmlType)!==-1) {
-    csType = jsonType;
+    csType = cjType;
   }
   else {
     csType = csAccept.split(',')[0];
@@ -150,7 +153,7 @@ function handleResponse(req, res, doc) {
     else {
       rtn = representation(doc.doc, csType, root);
     }
-    sendResponse(req, res, rtn, doc.code, doc.headers);
+    sendResponse(req, res, rtn, doc.code, (doc.headers||{}));
   }
   else {
     sendResponse(req, res, 'Server Response Error', 500);

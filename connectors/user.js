@@ -34,12 +34,14 @@ function main(req, res, parts, respond) {
   flag=false;
   switch (req.method) {
     case 'GET':
-      /* Web API no longer serves up passwordChange page
+      if(flag===false && parts[1]==="update" && parts[2]) {
+        flag=true;
+        sendUpdatePage(req, res, respond, parts[2]);
+      }
       if(flag===false && parts[1]==="pass" && parts[2]) {
         flag=true;
         sendPasswordPage(req, res, respond, parts[2]);
       }
-      */
       if(flag===false && parts[1] && parts[1].indexOf('?')===-1) {
         flag = true;
         sendItemPage(req, res, respond, parts[1]);
@@ -50,11 +52,9 @@ function main(req, res, parts, respond) {
     case 'POST':
       if(parts[1] && parts[1].indexOf('?')===-1) {
         switch(parts[1].toLowerCase()) {
-          /* Web API no longer supports update via POST
           case "update":
             updateUser(req, res, respond, parts[2]); 
             break;
-          */  
           case "pass":
             changePassword(req, res, respond, parts[2]); 
             break;
@@ -105,29 +105,35 @@ function sendListPage(req, res, respond) {
         
   // top-level links
   wstl.append({name:"homeLink",href:"/home/",
-    rel:["collection","/rels/home"],root:root}, coll);
+    rel:["home","collection"],root:root}, coll);
   wstl.append({name:"taskLink",href:"/task/",
-    rel:["collection","/rels/task"],root:root},coll); 
+    rel:["task","collection"],root:root},coll); 
   wstl.append({name:"userLink",href:"/user/",
-    rel:["collection","rels/user"],root:root},coll);
+    rel:["self","user","collection"],root:root},coll);
+  wstl.append({name:"userProfile",href:"/files/user.profile",
+    rel:["profile"],root:root},coll);
 
   // item actions
-  wstl.append({name:"userLinkItem",href:"/user/{key}",
-    rel:["item","/rels/item"],root:root},coll);
-  wstl.append({name:"userLinkChangePW",href:"/user/pass/{key}",
-    rel:["edit","/rels/edit"],root:root},coll);
-  wstl.append({name:"userTasksLink",href:"/task/?assignedUser={key}",
-    rel:["collection","/rels/tasksByUser"],root:root},coll);
+  wstl.append({name:"userLinkItem",href:"/user/{id}",
+    rel:["item"],root:root},coll);
+  wstl.append({name:"userLinkEdit",href:"/user/update/{id}",
+    rel:["edit"],root:root},coll);
+  wstl.append({name:"userLinkChangePW",href:"/user/pass/{id}",
+    rel:["changePW","edit"],root:root},coll);
+  wstl.append({name:"userTasksLink",href:"/task/?assignedUser={id}",
+    rel:["tasksByUser","collection"],root:root},coll);
   
   // add template
   wstl.append({name: "userFormAdd",href:"/user/",
-    rel:["create-form","/rels/userAdd"],root:root},coll);
+    rel:["create-form","userAdd","create-form"],root:root},coll);
 
   // list queries
   wstl.append({name:"userFormListByNick",href:"/user/",
-    rel:["search","/rels/usersByNick"],root:root},coll);
+    rel:["usersByNick","search"],root:root},coll);
   wstl.append({name:"userFormListByName",href:"/user/",
-    rel:["search","/rels/usersByName"],root:root},coll);
+    rel:["usersByName","search"],root:root},coll);
+  wstl.append({name:"userFormListByEmail",href:"/user/",
+    rel:["usersByEmail","search"],root:root},coll);
 
   // compose and send graph 
   doc = {};
@@ -154,26 +160,89 @@ function sendItemPage(req, res, respond, id) {
     data = item;
 
     // top-level links
-    tran = wstl.append({name:"homeLink",href:"/home/",
-      rel:["collection","/rels/home"],root:root}, coll);
-    tran = wstl.append({name:"taskLink",href:"/task/",
-      rel:["collection","/rels/task"],root:root},coll); 
-    tran = wstl.append({name:"userLink",href:"/user/",
-      rel:["collection","rels/user"],root:root},coll);
+    wstl.append({name:"homeLink",href:"/home/",
+      rel:["home","collection"],root:root}, coll);
+    wstl.append({name:"taskLink",href:"/task/",
+      rel:["task","collection"],root:root},coll); 
+    wstl.append({name:"userLink",href:"/user/",
+      rel:["collection","user"],root:root},coll);
+    wstl.append({name:"userProfile",href:"/files/user.profile",
+      rel:["profile"],root:root},coll);
     
     // item actions
-    wstl.append({name:"userLinkItem",href:"/user/{key}",
-      rel:["item","/rels/item"],root:root},coll);
-    wstl.append({name:"userLinkChangePW",href:"/user/pass/{key}",
-      rel:["edit","/rels/edit"],root:root},coll);
-    wstl.append({name:"userTasksLink",href:"/task/?assignedUser={key}",
-      rel:["collection","/rels/tasksByUser"],root:root},coll);
+    wstl.append({name:"userLinkItem",href:"/user/{id}",
+      rel:["item"],root:root},coll);
+    wstl.append({name:"userLinkEdit",href:"/user/update/{id}",
+      rel:["edit"],root:root},coll);
+    wstl.append({name:"userLinkChangePW",href:"/user/pass/{id}",
+      rel:["changepw","edit"],root:root},coll);
+    wstl.append({name:"userTasksLink",href:"/task/?assignedUser={id}",
+      rel:["tasksByUser","collection"],root:root},coll);
+
+    // list queries
+    wstl.append({name:"userFormListByNick",href:"/user/",
+      rel:["usersByNick","search"],root:root},coll);
+    wstl.append({name:"userFormListByName",href:"/user/",
+      rel:["usersByName","search"],root:root},coll);
+    wstl.append({name:"userFormListByEmail",href:"/user/",
+      rel:["usersByEmail","search"],root:root},coll);
+        
+    // compose and send graph 
+    doc = {};
+    doc.title = "TPS - Users";
+    doc.actions = coll;
+    doc.data =  data;
+    doc.content = content;
+    respond(req, res, {code:200, doc:{user:doc}});        
+  }
+}
+
+function sendUpdatePage(req, res, respond, id) {
+  var item, doc, coll, root;
+  
+  root = '//'+req.headers.host;
+  coll = [];
+  data = [];
+  
+  // load data item
+  item = components.user('read',id);
+  if(item.length===0) {
+    respond(req, res, utils.errorResponse(req, res, "File Not Found", 404));
+  }
+  else {
+    data = item;
+
+    // top-level links
+    wstl.append({name:"homeLink",href:"/home/",
+      rel:["home","collection"],root:root}, coll);
+    wstl.append({name:"taskLink",href:"/task/",
+      rel:["task","collection"],root:root},coll); 
+    wstl.append({name:"userLink",href:"/user/",
+      rel:["collection","user"],root:root},coll);
+    wstl.append({name:"userProfile",href:"/files/user.profile",
+      rel:["profile"],root:root},coll);
+    
+    // item actions
+    wstl.append({name:"userLinkItem",href:"/user/{id}",
+      rel:["item"],root:root},coll);
+    wstl.append({name:"userLinkEdit",href:"/user/update/{id}",
+      rel:["edit"],root:root},coll);
+    wstl.append({name:"userLinkChangePW",href:"/user/pass/{id}",
+      rel:["changepw","edit"],root:root},coll);
+    wstl.append({name:"userTasksLink",href:"/task/?assignedUser={id}",
+      rel:["tasksByUser","collection"],root:root},coll);
     
     // item forms
-    tran = wstl.append({name:"userFormEdit",href:"/user/{key}",
-      rel:["edit-form","/rels/edit"],root:root},coll);
-    tran = wstl.append({name:"userFormEditPost",href:"/user/update/{key}",
-      rel:["edit-form","/rels/edit"],root:root},coll);
+    tran = wstl.append({name:"userFormEditPost",href:"/user/update/{id}",
+      rel:["post-changePW","edit-form"],root:root},coll);
+
+    // list queries
+    wstl.append({name:"userFormListByNick",href:"/user/",
+      rel:["usersByNick","search"],root:root},coll);
+    wstl.append({name:"userFormListByName",href:"/user/",
+      rel:["usersByName","search"],root:root},coll);
+    wstl.append({name:"userFormListByEmail",href:"/user/",
+      rel:["usersByEmail","search"],root:root},coll);
 
     // compose and send graph 
     doc = {};
@@ -181,6 +250,7 @@ function sendItemPage(req, res, respond, id) {
     doc.actions = coll;
     doc.data =  data;
     doc.content = content;
+
     respond(req, res, {code:200, doc:{user:doc}});        
   }
 }
@@ -201,26 +271,36 @@ function sendPasswordPage(req, res, respond, id) {
     data = item;
 
     // top-level links
-    tran = wstl.append({name:"homeLink",href:"/home/",
-      rel:["collection","/rels/home"],root:root}, coll);
-    tran = wstl.append({name:"taskLink",href:"/task/",
-      rel:["collection","/rels/task"],root:root},coll); 
-    tran = wstl.append({name:"userLink",href:"/user/",
-      rel:["collection","rels/user"],root:root},coll);
+    wstl.append({name:"homeLink",href:"/home/",
+      rel:["home","collection"],root:root}, coll);
+    wstl.append({name:"taskLink",href:"/task/",
+      rel:["task","collection"],root:root},coll); 
+    wstl.append({name:"userLink",href:"/user/",
+      rel:["collection","user"],root:root},coll);
+    wstl.append({name:"userProfile",href:"/files/user.profile",
+      rel:["profile"],root:root},coll);
     
     // item actions
-    wstl.append({name:"userLinkItem",href:"/user/{key}",
-      rel:["item","/rels/item"],root:root},coll);
-    wstl.append({name:"userLinkChangePW",href:"/user/pass/{key}",
-      rel:["edit","/rels/edit"],root:root},coll);
-    wstl.append({name:"userTasksLink",href:"/task/?assignedUser={key}",
-      rel:["collection","/rels/tasksByUser"],root:root},coll);
+    wstl.append({name:"userLinkItem",href:"/user/{id}",
+      rel:["item"],root:root},coll);
+    wstl.append({name:"userLinkEdit",href:"/user/update/{id}",
+      rel:["edit"],root:root},coll);
+    wstl.append({name:"userLinkChangePW",href:"/user/pass/{id}",
+      rel:["changepw","edit"],root:root},coll);
+    wstl.append({name:"userTasksLink",href:"/task/?assignedUser={id}",
+      rel:["tasksByUser","collection"],root:root},coll);
     
     // item forms
-    tran = wstl.append({name:"userFormChangePW",href:"/user/pass/{key}",
-      rel:["edit-form","/rels/edit"],root:root},coll);
-    tran = wstl.append({name:"userFormChangePWPost",href:"/user/pass/{key}",
-      rel:["edit-form","/rels/edit"],root:root},coll);
+    tran = wstl.append({name:"userFormChangePWPost",href:"/user/pass/{id}",
+      rel:["post-changePW","edit-form"],root:root},coll);
+
+    // list queries
+    wstl.append({name:"userFormListByNick",href:"/user/",
+      rel:["usersByNick","search"],root:root},coll);
+    wstl.append({name:"userFormListByName",href:"/user/",
+      rel:["usersByName","search"],root:root},coll);
+    wstl.append({name:"userFormListByEmail",href:"/user/",
+      rel:["usersByEmail","search"],root:root},coll);
 
     // compose and send graph 
     doc = {};

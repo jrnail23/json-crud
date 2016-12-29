@@ -16,11 +16,22 @@ module.exports = main;
 
 // app-level actions for tasks
 function main(action, args1, args2, args3) {
-  var name, rtn, props;
+  var name, rtn, props, profile;
     
   // valid fields for this record   
   props = ["id","title","tags","completeFlag","assignedUser","dateCreated","dateUpdated"];
   elm = 'task';
+
+  // shared profile info for this object
+  profile = {
+    "id" : {"prompt" : "ID", "display" : true},
+    "title" : {"prompt" : "Title", "display" : true},
+    "tags" : {"prompt" : "Tags", "display" : true},
+    "completeFlag" : {"prompt" : "Complete Flag", "display" : true},
+    "assignedUser" : {"prompt" : "Asigned User", "display" : true},
+    "dateCreated" :  {"prompt" : "Created", "display" : false},
+    "dateUpdated" :  {"prompt" : "Updated", "display" : false}
+  };
 
   switch (action) {
     case 'exists':
@@ -29,6 +40,9 @@ function main(action, args1, args2, args3) {
     case 'props' :
       rtn = utils.setProps(args1,props);
       break;  
+    case 'profile':
+      rtn = profile;
+      break;
     case 'list':
       rtn = utils.cleanList(storage(elm, 'list'));
       break;
@@ -53,6 +67,9 @@ function main(action, args1, args2, args3) {
     case 'assign-user':
       rtn = assignUser(elm, args1, args2, props);
       break;
+    case 'mark-active':
+      rtn = markActive(elm, args1, props);
+      break;  
     default:
       rtn = null;
   }
@@ -166,6 +183,23 @@ function assignUser(elm, id, task, props) {
   
   return rtn;
 }
+
+function markActive(elm, id, props) {
+  var rtn, check;
+  
+  check = storage(elm, 'item', id);
+  if(check===null) {
+    doc = utils.exception("File Not Found", "no record on file", 404);    
+  }
+  else {
+    item = check;
+    item.id = id;
+    item.completeFlag = "false";
+    storage(elm, 'update', id, utils.setProps(item, props));
+  }
+
+}
+
 
 // EOF
 

@@ -72,9 +72,8 @@ function domHelp() {
 
     tr = node("tr");
     tr.className = args.className||"";
-    th = node('th');
-    th.className = "right aligned";
-    th.innerHTML = args.text||"";;
+    th = node("td");
+    th.innerHTML = "<strong>" + args.text + "</strong>"||"";
     td = node("td");
     td.className = "value";
     td.innerHTML = args.value||"";
@@ -124,8 +123,21 @@ function domHelp() {
   }
   
   // low-level helpers for DOM
-  function push(source,target) {
-    target.appendChild(source);
+  
+  // takes list of dom elements
+  function push() {
+    var source, target, args;
+    
+    args = arguments;
+    if(args.length>=2) {
+      for(i=0,x=args.length;i<x;i++) {
+          target=args[i+1];
+          source=args[i];
+          if(target) {
+            target.appendChild(source);
+          }
+      }
+    }
   }
 
   function tags(tag,elm) {

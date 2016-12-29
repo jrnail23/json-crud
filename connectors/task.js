@@ -35,7 +35,10 @@ function main(req, res, parts, respond) {
   flag = false;
   switch (req.method) {
     case 'GET':
-      /* Web API no longer serves up assign and completed forms
+      if(flag===false && parts[1]==="active" && parts[2]) {
+        flag=true;
+        sendActivePage(req, res, respond, parts[2]);
+      }
       if(flag===false && parts[1]==="assign" && parts[2]) {
         flag=true;
         sendAssignPage(req, res, respond, parts[2]);
@@ -44,7 +47,6 @@ function main(req, res, parts, respond) {
         flag=true;
         sendCompletedPage(req, res, respond, parts[2]);
       }
-      */
       if(flag===false && parts[1] && parts[1].indexOf('?')===-1) {
         flag = true;
         sendItemPage(req, res, respond, parts[1]);
@@ -56,16 +58,17 @@ function main(req, res, parts, respond) {
     case 'POST':
       if(parts[1] && parts[1].indexOf('?')===-1) {
         switch(parts[1].toLowerCase()) {
-          /* Web API no longer supports update & remove via POST
           case "update":
             updateTask(req, res, respond, parts[2]); 
             break;
           case "remove":
             removeTask(req, res, respond, parts[2]);
             break;
-          */  
           case "completed":
             markCompleted(req, res, respond, parts[2]);
+            break;  
+          case "active":
+            markActive(req, res, respond, parts[2]);
             break;  
           case "assign":
             assignUser(req, res, respond, parts[2]);
@@ -127,19 +130,23 @@ function sendListPage(req, res, respond) {
       
   // top-level links
   wstl.append({name:"homeLink",href:"/home/",
-    rel:["collection","/rels/home"],root:root}, coll);
+    rel:["home","collection"],root:root}, coll);
   wstl.append({name:"taskLink",href:"/task/",
-    rel:["collection","/rels/task"],root:root},coll); 
+    rel:["self", "task","collection"],root:root},coll); 
   wstl.append({name:"userLink",href:"/user/",
-    rel:["collection","rels/user"],root:root},coll);
+    rel:["user","collection"],root:root},coll);
+  wstl.append({name:"taskProfile",href:"/files/task.profile",
+    rel:["profile"],root:root},coll);
   
   // item actions
-  wstl.append({name:"taskLinkItem",href:"/task/{key}",
-    rel:["item","/rels/item"],root:root},coll);
-  wstl.append({name:"taskAssignLink",href:"/task/assign/{key}",
-    rel:["edit-form","/rels/taskAssignUser"],root:root},coll);
-  wstl.append({name:"taskCompletedLink",href:"/task/completed/{key}",
-    rel:["edit-form","/rels/taskMarkCompleted"],root:root},coll);
+  wstl.append({name:"taskLinkItem",href:"/task/{id}",
+    rel:["item"],root:root},coll);
+  wstl.append({name:"taskAssignLink",href:"/task/assign/{id}",
+    rel:["assignUser","edit-form"],root:root},coll);
+  wstl.append({name:"taskCompletedLink",href:"/task/completed/{id}",
+    rel:["markCompleted","edit-form"],root:root},coll);
+  wstl.append({name:"taskActiveLink",href:"/task/active/{id}",
+    rel:["markActive","edit-form"],root:root},coll);
   
   // add template
   wstl.append({name:"taskFormAdd",href:"/task/",
@@ -147,13 +154,15 @@ function sendListPage(req, res, respond) {
 
   // list queries
   wstl.append({name:"taskFormListCompleted",href:"/task/",
-    rel:["search","/rels/taskCompleted"],root:root},coll);
+    rel:["completed","search"],root:root},coll);
   wstl.append({name:"taskFormListActive",href:"/task/",
-    rel:["search","/rels/taskActive"],root:root},coll);
+    rel:["active","search"],root:root},coll);
   wstl.append({name:"taskFormListByTitle",href:"/task/",
-    rel:["search","/rels/taskByTitle"],root:root},coll);
+    rel:["byTitle","search",],root:root},coll);
   wstl.append({name:"taskFormListByUser",href:"/task/",
-    rel:["search","/rels/taskByUser"],root:root},coll);
+    rel:["byUser","search"],root:root},coll);
+  wstl.append({name:"taskFormListByTag",href:"/task/",
+    rel:["byTag","search"],root:root},coll);
 
   // compose and send graph 
   doc = {};
@@ -183,29 +192,29 @@ function sendItemPage(req, res, respond, id) {
     data = item;
 
     // top-level links
-    tran = wstl.append({name:"homeLink",href:"/home/",
-      rel:["collection","/rels/home"],root:root}, coll);
-    tran = wstl.append({name:"taskLink",href:"/task/",
-      rel:["collection","/rels/task"],root:root},coll); 
-    tran = wstl.append({name:"userLink",href:"/user/",
-      rel:["collection","rels/user"],root:root},coll);
+    wstl.append({name:"homeLink",href:"/home/",
+      rel:["home","collection"],root:root}, coll);
+    wstl.append({name:"taskLink",href:"/task/",
+      rel:["self","task","collection"],root:root},coll); 
+    wstl.append({name:"userLink",href:"/user/",
+      rel:["user","collection"],root:root},coll);
+    wstl.append({name:"taskProfile",href:"/files/task.profile",
+      rel:["profile"],root:root},coll);
     
     // item links
-    wstl.append({name:"taskLinkItem",href:"/task/{key}",
-      rel:["item","/rels/item"],root:root},coll);
-    wstl.append({name:"taskAssignLink",href:"/task/assign/{key}",
-      rel:["edit-form","/rels/taskAssignUser"],root:root},coll);
-    wstl.append({name:"taskCompletedLink",href:"/task/completed/{key}",
-      rel:["edit-form","/rels/taskMarkCompleted"],root:root},coll);
+    wstl.append({name:"taskLinkItem",href:"/task/{id}",
+      rel:["item"],root:root},coll);
+    wstl.append({name:"taskAssignLink",href:"/task/assign/{id}",
+      rel:["assignUser","edit-form"],root:root},coll);
+    wstl.append({name:"taskCompletedLink",href:"/task/completed/{id}",
+      rel:["markCompleted","edit-form"],root:root},coll);
+    wstl.append({name:"taskActiveLink",href:"/task/active/{id}",
+      rel:["markActive","edit-form"],root:root},coll);
     
     // item forms
-    tran = wstl.append({name:"taskFormEdit",href:"/task/{key}",
-      rel:["edit-form","/rels/edit"],root:root},coll);
-    tran = wstl.append({name:"taskFormEditPost",href:"/task/update/{key}",
-      rel:["edit-form","/rels/edit"],root:root},coll);
-    tran = wstl.append({name:"taskFormRemovePost",href:"/task/remove/{key}",
-      rel:["edit-form","/rels/remove"],root:root},coll);
-
+    tran = wstl.append({name:"taskFormAdd",href:"/task/{id}",
+      rel:["post-edit","edit-form"],root:root},coll);
+    
     // compose and send graph 
     doc = {};
     doc.title = "TPS - Tasks";
@@ -237,24 +246,28 @@ function sendAssignPage(req, res, respond, id) {
     data = item;
 
     // top-level links
-    tran = wstl.append({name:"homeLink",href:"/home/",
-      rel:["collection","/rels/home"],root:root}, coll);
-    tran = wstl.append({name:"taskLink",href:"/task/",
-      rel:["collection","/rels/task"],root:root},coll); 
-    tran = wstl.append({name:"userLink",href:"/user/",
-      rel:["collection","rels/user"],root:root},coll);
+    wstl.append({name:"homeLink",href:"/home/",
+      rel:["home","collection"],root:root}, coll);
+    wstl.append({name:"taskLink",href:"/task/",
+      rel:["task","collection"],root:root},coll); 
+    wstl.append({name:"userLink",href:"/user/",
+      rel:["user","collection"],root:root},coll);
+    wstl.append({name:"taskProfile",href:"/files/task.profile",
+      rel:["profile"],root:root},coll);
     
     // item links
-    wstl.append({name:"taskLinkItem",href:"/task/{key}",
-      rel:["item","/rels/item"],root:root},coll);
-    wstl.append({name:"taskAssignLink",href:"/task/assign/{key}",
-      rel:["edit-form","/rels/taskAssignUser"],root:root},coll);
-    wstl.append({name:"taskCompletedLink",href:"/task/completed/{key}",
-      rel:["edit-form","/rels/taskMarkCompleted"],root:root},coll);
+    wstl.append({name:"taskLinkItem",href:"/task/{id}",
+      rel:["item"],root:root},coll);
+    wstl.append({name:"taskAssignLink",href:"/task/assign/{id}",
+      rel:["assignUser","edit-form"],root:root},coll);
+    wstl.append({name:"taskCompletedLink",href:"/task/completed/{id}",
+      rel:["markCompleted","edit-form"],root:root},coll);
+    wstl.append({name:"taskActiveLink",href:"/task/active/{id}",
+      rel:["markCompleted","edit-form"],root:root},coll);
     
     // item forms
-    tran = wstl.append({name:"taskAssignForm",href:"/task/assign/{key}",
-      rel:["edit-form","/rels/taskAssignUser"],root:root},coll);
+    tran = wstl.append({name:"taskAssignForm",href:"/task/assign/{id}",
+      rel:["assignUser","edit-form"],root:root},coll);
 
     // compose & send graph 
     doc = {};
@@ -284,24 +297,79 @@ function sendCompletedPage(req, res, respond, id) {
     data = item;
 
     // top-level links
-    tran = wstl.append({name:"homeLink",href:"/home/",
-      rel:["collection","/rels/home"],root:root}, coll);
-    tran = wstl.append({name:"taskLink",href:"/task/",
-      rel:["collection","/rels/task"],root:root},coll); 
-    tran = wstl.append({name:"userLink",href:"/user/",
-      rel:["collection","rels/user"],root:root},coll);
+    wstl.append({name:"homeLink",href:"/home/",
+      rel:["home","collection"],root:root}, coll);
+    wstl.append({name:"taskLink",href:"/task/",
+      rel:["task","collection"],root:root},coll); 
+    wstl.append({name:"userLink",href:"/user/",
+      rel:["user","collection"],root:root},coll);
+    wstl.append({name:"taskProfile",href:"/files/task.profile",
+      rel:["profile"],root:root},coll);
 
     // item links
-    wstl.append({name:"taskLinkItem",href:"/task/{key}",
-      rel:["item","/rels/item"],root:root},coll);
-    wstl.append({name:"taskAssignLink",href:"/task/assign/{key}",
-      rel:["edit-form","/rels/taskAssignUser"],root:root},coll);
-    wstl.append({name:"taskCompletedLink",href:"/task/completed/{key}",
-      rel:["edit-form","/rels/taskMarkCompleted"],root:root},coll);
+    wstl.append({name:"taskLinkItem",href:"/task/{id}",
+      rel:["item"],root:root},coll);
+    wstl.append({name:"taskAssignLink",href:"/task/assign/{id}",
+      rel:["assignUser","edit-form"],root:root},coll);
+    wstl.append({name:"taskCompletedLink",href:"/task/completed/{id}",
+      rel:["markCompleted","edit-form"],root:root},coll);
+    wstl.append({name:"taskActiveLink",href:"/task/active/{id}",
+      rel:["markCompleted","edit-form"],root:root},coll);
     
     // item forms
-    tran = wstl.append({name:"taskCompletedForm",href:"/task/completed/{key}",
-      rel:["edit-form","/rels/taskMarkCompleted"],root:root},coll);
+    tran = wstl.append({name:"taskCompletedForm",href:"/task/completed/{id}",
+      rel:["markCompleted","edit-form"],root:root},coll);
+        
+    // compose & send graph 
+    doc = {};
+    doc.title = "TPS - Tasks";
+    doc.actions = coll;
+    doc.data =  data;
+    doc.content = content;
+    doc.related = related;
+    respond(req, res, {code:200, doc:{task:doc}});
+  }
+}
+
+function sendActivePage(req, res, respond, id) {
+  var item, doc, coll, root, data, related;
+  
+  root = '//'+req.headers.host;
+  coll = [];
+  data = [];
+  related = {};
+  
+  // load data item
+  item = components.task('read',id);
+  if(item.length===0) {
+    respond(req, res, utils.errorResponse(req, res, "File Not Found", 404));
+  }
+  else {
+    data = item;
+
+    // top-level links
+    wstl.append({name:"homeLink",href:"/home/",
+      rel:["home","collection"],root:root}, coll);
+    wstl.append({name:"taskLink",href:"/task/",
+      rel:["task","collection"],root:root},coll); 
+    wstl.append({name:"userLink",href:"/user/",
+      rel:["user","collection"],root:root},coll);
+    wstl.append({name:"taskProfile",href:"/files/task.profile",
+      rel:["profile"],root:root},coll);
+
+    // item links
+    wstl.append({name:"taskLinkItem",href:"/task/{id}",
+      rel:["item"],root:root},coll);
+    wstl.append({name:"taskAssignLink",href:"/task/assign/{id}",
+      rel:["assignUser","edit-form"],root:root},coll);
+    wstl.append({name:"taskCompletedLink",href:"/task/completed/{id}",
+      rel:["markCompleted","edit-form"],root:root},coll);
+    wstl.append({name:"taskActiveLink",href:"/task/active/{id}",
+      rel:["markCompleted","edit-form"],root:root},coll);
+    
+    // item forms
+    tran = wstl.append({name:"taskActiveForm",href:"/task/active/{id}",
+      rel:["markCompleted","edit-form"],root:root},coll);
         
     // compose & send graph 
     doc = {};
@@ -417,6 +485,31 @@ function markCompleted(req, res, respond, id) {
   // execute
   try {
     doc = components.task('mark-completed', id);
+    if(doc && doc.type==='error') {
+      doc = utils.errorResponse(req, res, doc.message, doc.code);    
+    }
+  }
+  catch (ex) {
+    doc = utils.errorResponse(req, res, 'Server Error', 500);
+  }
+
+  if (!doc) {
+    respond(req, res, 
+      {code:303, doc:"", headers:{'location':'//'+req.headers.host+"/task/"}}
+    );
+  } 
+  else {
+    respond(req, res, doc);
+  }
+}
+
+// handle mark complete operation (no body)
+function markActive(req, res, respond, id) {
+  var doc;
+
+  // execute
+  try {
+    doc = components.task('mark-active', id);
     if(doc && doc.type==='error') {
       doc = utils.errorResponse(req, res, doc.message, doc.code);    
     }

@@ -11,9 +11,12 @@
 // load representors
 //var html = require('./representors/html.js');
 var json = require('./representors/json.js');
+var haljson = require('./representors/haljson.js');
 var wstljson = require('./representors/wstljson.js');
+var siren = require('./representors/siren.js');
+var cj = require('./representors/cj.js');
 
-var defaultFormat = "application/json";
+var defaultFormat = "application/vnd.collection+json";
 
 module.exports = main;
 
@@ -33,8 +36,17 @@ function main(object, mimeType, root) {
     case "application/json":
       doc = json(object, root);
       break;
+    case "application/vnd.hal+json":
+      doc = haljson(object, root);
+      break;
+    case "application/vnd.siren+json":
+      doc = siren(object, root);
+      break;  
+    case "application/vnd.collection+json":
+      doc = cj(object, root);
+      break;  
     default:
-      doc = json(object, root);
+      doc = cj(object, root);
       break;
   }
 
